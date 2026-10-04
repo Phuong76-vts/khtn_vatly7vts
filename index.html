@@ -1,0 +1,449 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trinh Sát Âm Thanh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Signika:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: sổ tay trinh sát – thanh hồ sơ bên trái (6 thí nghiệm), bàn thí nghiệm bên phải; mỗi hồ sơ cho 1 "manh mối" kẹp ghim.
+   Giao diện sáng có chủ ý (giấy kraft + cam của chương Âm thanh), màu đặt tường minh. */
+:root{
+  --paper:#FBF6EC; --paper2:#F3EAD7; --card:#FFFDF8; --ink:#2B2118; --ink2:#6B5B4B; --line:#E2D5BD;
+  --orange:#E8762B; --orange2:#FBE3CF; --teal:#1F8A8A; --teal2:#D6EEEE; --navy:#22395B; --red:#C8443A;
+  --ok:#1F8A5B; --okbg:#DDF1E6; --bad:#C8443A; --badbg:#F8DFDB;
+  --display:'Signika', 'Segoe UI', Arial, sans-serif; --body:'Be Vietnam Pro','Segoe UI',Arial,sans-serif; --mono:'JetBrains Mono',Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;
+  background-image:radial-gradient(rgba(107,91,75,.08) 1px,transparent 1px);background-size:14px 14px}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:18px;padding-block:16px 60px}
+button{font-family:inherit;cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;text-wrap:balance}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:16px;min-width:0;box-shadow:0 2px 0 var(--line)}
+.btn{font:700 15px var(--body);padding:9px 16px;border-radius:10px;border:1.5px solid var(--ink);background:var(--card);transition:transform .1s}
+.btn:hover{background:var(--paper2)}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.pri:hover{background:#D9661C}
+.btn.on{background:var(--ink);color:#fff}
+.fb{min-height:1.5em;font-weight:700}.fb.ok{color:var(--ok)}.fb.no{color:var(--bad)}
+.dim{color:var(--ink2)} .mono{font-family:var(--mono)}
+.tag{display:inline-block;font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--orange);background:var(--orange2);border-radius:6px;padding:3px 9px}
+canvas{display:block;width:100%;height:auto;border-radius:10px;background:#FFFDF8;touch-action:none}
+input[type=range]{width:100%;accent-color:var(--orange)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;margin-top:10px}
+.ctl label{font-weight:700;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:var(--card);font:700 14px var(--body);padding:8px 12px}
+.seg button.on{background:var(--ink);color:#fff}
+
+/* header */
+header{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;margin-bottom:14px}
+.brand{display:flex;gap:14px;align-items:center}
+.badge{width:64px;height:64px;border-radius:50%;background:var(--orange);display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 4px #fff,0 0 0 2px var(--orange)}
+.brand h1{font-size:clamp(28px,5vw,46px);font-weight:700}
+.brand p{margin:0;font:600 12.5px var(--mono);color:var(--ink2);letter-spacing:.04em}
+.clues{display:flex;gap:6px;align-items:center;font:700 13px var(--mono);color:var(--ink2)}
+.clue{width:30px;height:30px;border-radius:6px;border:1.5px dashed var(--line);display:grid;place-items:center;background:var(--card);font-size:13px}
+.clue.got{border:1.5px solid var(--orange);background:var(--orange2);color:var(--orange);transform:rotate(-6deg)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px;align-items:start}
+.files{position:sticky;top:12px;display:flex;flex-direction:column;gap:8px}
+.file{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:700;font-size:14px;line-height:1.3}
+.file .n{width:34px;height:34px;border-radius:8px;background:var(--paper2);display:grid;place-items:center;font:700 15px var(--mono)}
+.file.on{border-color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.file.done .n{background:var(--orange);color:#fff}
+.file small{display:block;font-weight:500;color:var(--ink2);font-size:12.5px}
+.view[hidden]{display:none}
+.vhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.vhead h2{font-size:clamp(24px,3.6vw,34px)}
+.goal{font-size:15px;color:var(--ink2);margin:0 0 12px;max-width:80ch}
+.goal b{color:var(--ink)}
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;align-items:start}
+.qcard{display:flex;flex-direction:column;gap:8px}
+.qcard .q{font-weight:800}
+.opt{text-align:left;font:600 15px var(--body);padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card)}
+.opt:hover{border-color:var(--ink)}
+.opt.right{border-color:var(--ok);background:var(--okbg)}
+.opt.wrong{border-color:var(--bad);background:var(--badbg)}
+.opt:disabled{cursor:default}
+.qcard .opt,#q5 .opt{display:block;width:100%;margin-bottom:6px}
+.clipped{position:relative;background:#FFF6D6;border:1.5px solid #E9D48A;border-radius:10px;padding:12px 14px 12px 16px;font-weight:600}
+.clipped::before{content:"";position:absolute;top:-10px;left:18px;width:14px;height:26px;border:3px solid #9A8A6A;border-radius:8px;border-bottom:0}
+.note{font-size:14px;color:var(--ink2)}
+details.tnote{margin-top:14px;border:1.5px dashed var(--line);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--ink2);background:var(--card)}
+details.tnote summary{font-weight:800;color:var(--ink);cursor:pointer}
+.inst{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.inst button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:800}
+.inst button:hover{border-color:var(--ink)}
+.inst svg{width:90px;height:90px}
+.shake{animation:shake .08s linear 8}
+@keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+.order{display:flex;flex-direction:column;gap:8px}
+.order li{list-style:none;display:flex;align-items:center;gap:10px;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font-weight:600;font-size:14.5px}
+.order li.ok{border-color:var(--ok);background:var(--okbg)} .order li.no{border-color:var(--bad);background:var(--badbg)}
+.order .n{font:700 16px var(--mono);color:var(--orange);width:22px}
+.order .t{flex:1}
+.order button{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--line);background:var(--card)}
+.order button:disabled{opacity:.3}
+.speeds{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.speeds div{display:grid;grid-template-columns:110px 1fr 90px;gap:8px;align-items:center}
+.speeds i{display:block;height:12px;border-radius:6px;background:var(--teal)}
+.speeds span:last-child{font-family:var(--mono);font-size:13px;text-align:right}
+.case{border:2px solid var(--ink);border-radius:14px;padding:18px;background:var(--card);box-shadow:5px 5px 0 var(--orange)}
+.case h3{font-size:26px}
+.case ul{margin:8px 0 0;padding-left:20px}
+.info{width:100%;border-collapse:collapse;font-size:15px}
+.info th,.info td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+.info th{width:28%;color:var(--orange)}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50;width:100%;height:100%;background:transparent;border-radius:0}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:800;padding:12px 18px;border-radius:12px;z-index:60;max-width:calc(100% - 32px);text-align:center;box-shadow:4px 4px 0 var(--orange)}
+@media (max-width:920px){.layout{grid-template-columns:1fr}.files{position:static;flex-direction:row;overflow-x:auto;padding-bottom:4px}.file{min-width:190px}.two{grid-template-columns:1fr}}
+@media (max-width:520px){.inst{grid-template-columns:repeat(2,minmax(0,1fr))}.speeds div{grid-template-columns:90px 1fr 80px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<canvas id="fx"></canvas>
+<div class="wrap">
+<header>
+  <div class="brand"><div class="badge"><svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 26 V14 h6 l8-7 v26 l-8-7z" fill="#fff"/><path d="M26 13 a9 9 0 0 1 0 14 M30 9 a14 14 0 0 1 0 22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></div>
+    <div><h1>Trinh Sát Âm Thanh</h1><p>KHTN 7 · BÀI 12 · SÓNG ÂM · HỌC LIỆU TƯƠNG TÁC VÀ MÔ PHỎNG</p></div></div>
+  <div class="clues" aria-label="Manh mối đã thu thập">Manh mối <span class="clue" data-c="1">1</span><span class="clue" data-c="2">2</span><span class="clue" data-c="3">3</span><span class="clue" data-c="4">4</span><span class="clue" data-c="5">5</span><span class="clue" data-c="6">6</span></div>
+</header>
+
+<div class="layout">
+<nav class="files" id="files" aria-label="Các hồ sơ thí nghiệm"></nav>
+<main>
+
+<!-- INTRO -->
+<section class="view" id="v-intro">
+  <div class="card" style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:center" id="introCard">
+    <div><span class="tag">Hồ sơ mở</span>
+      <h2 style="font-size:clamp(26px,4vw,40px);margin-top:10px">Bí ẩn tiếng vó ngựa</h2>
+      <p>Ngày xưa, khi chưa có phương tiện truyền thông, để phát hiện quân địch đang di chuyển bằng ngựa, người trinh sát <b>áp tai xuống đất</b> và nghe được tiếng vó ngựa cách xa vài kilômét. <b>Tại sao?</b></p>
+      <p class="dim">Em là trinh sát. Hãy làm 6 thí nghiệm, thu thập 6 manh mối, rồi trở lại đây để phá án.</p>
+      <div class="row"><button class="btn pri" data-go="c1">Bắt đầu hồ sơ 1 →</button><button class="btn" id="introPlay">▶ Nghe tiếng vó ngựa</button></div>
+    </div>
+    <canvas id="cvIntro" width="520" height="300" aria-label="Người trinh sát áp tai xuống đất, xa xa là đoàn ngựa đang chạy"></canvas>
+  </div>
+  <div class="card" style="margin-top:14px"><b>Mục tiêu bài học</b><ul style="margin:6px 0 0;padding-left:20px"><li>Thực hiện thí nghiệm tạo sóng âm (như gảy đàn, gõ vào thanh kim loại,…) để chứng tỏ được sóng âm có thể truyền được trong chất rắn, lỏng, khí.</li><li>Giải thích được sự truyền sóng âm trong không khí.</li></ul><p class="note" style="margin:8px 0 0">Học liệu có phát âm thanh – hãy bật loa. Bấm vào các nút để phát âm thanh.</p></div>
+</section>
+
+<!-- C1 -->
+<section class="view" id="v-c1" hidden>
+  <div class="vhead"><h2>Hồ sơ 1 · Thanh thép dao động</h2><span class="tag">I.1 Dao động · Hình 12.1</span></div>
+  <p class="goal"><b>Thí nghiệm:</b> kéo đầu A của thanh thép xuống (kéo bằng chuột hoặc ngón tay) rồi thả tay. Quan sát đầu A chuyển động thế nào quanh vị trí cân bằng O.</p>
+  <div class="two">
+    <div class="card"><canvas id="cv1" width="640" height="340" aria-label="Thanh thép AB kẹp đầu B, kéo đầu A rồi thả"></canvas>
+      <div class="ctl"><label>Độ dài phần thanh thép tự do<input type="range" id="len1" min="0.5" max="1" step="0.05" value="0.85"></label><label>Kéo nhanh<span class="row"><button class="btn" id="pluck1">Kéo xuống và thả</button><span class="mono dim" id="cnt1">0 lần qua lại</span></span></label></div></div>
+    <div class="card qcard"><span class="q">Chuyển động qua lại quanh vị trí cân bằng O của đầu A được gọi là gì?</span><div id="q1"></div><div class="fb" id="f1"></div><div class="note">Thử: thanh ngắn hơn thì dao động nhanh hay chậm hơn?</div></div>
+  </div>
+  <details class="tnote"><summary>Gợi ý cho giáo viên</summary>Có thể làm song song thí nghiệm thật với thước nhựa/thanh thép kẹp ở mép bàn. Yêu cầu học sinh tìm thêm ví dụ về dao động: con lắc, dây đàn, cành cây đung đưa, màng loa.</details>
+</section>
+
+<!-- C2 -->
+<section class="view" id="v-c2" hidden>
+  <div class="vhead"><h2>Hồ sơ 2 · Từ dao động đến sóng</h2><span class="tag">I.2 Sóng · Hình 12.2, 12.3</span></div>
+  <p class="goal"><b>Thí nghiệm:</b> cho nguồn dao động, quan sát dao động lan truyền ra xung quanh. Chú ý chiếc phao (trên mặt nước) và vòng lò xo màu đỏ: chúng có bị sóng cuốn đi không?</p>
+  <div class="row" style="margin-bottom:10px"><span class="seg" id="seg2"><button data-t="water" class="on">Sóng trên mặt nước</button><button data-t="spring">Sóng trên lò xo</button></span><button class="btn pri" id="run2">Cho dao động</button></div>
+  <div class="two">
+    <div class="card"><canvas id="cv2" width="640" height="340" aria-label="Mô phỏng sóng"></canvas><div class="note" id="cap2" style="margin-top:6px"></div></div>
+    <div class="card qcard"><span class="q">Khi sóng truyền đi, chiếc phao / vòng lò xo màu đỏ…</span><div id="q2"></div><div class="fb" id="f2"></div></div>
+  </div>
+  <details class="tnote"><summary>Gợi ý cho giáo viên</summary>Nhấn mạnh: sóng là sự lan truyền <b>dao động</b> trong môi trường, các phần tử môi trường chỉ dao động quanh vị trí của chúng chứ không bị “cuốn” theo sóng. Trên lò xo xuất hiện những đoạn nén và dãn liên tiếp – giống sóng âm trong không khí ở Hồ sơ 4.</details>
+</section>
+
+<!-- C3 -->
+<section class="view" id="v-c3" hidden>
+  <div class="vhead"><h2>Hồ sơ 3 · Nguồn âm</h2><span class="tag">II Nguồn âm · Hình 12.4</span></div>
+  <p class="goal"><b>Thí nghiệm:</b> bấm vào từng vật để làm nó phát ra âm. Quan sát bộ phận nào đang dao động. Thử cả 4 nguồn âm.</p>
+  <div class="two">
+    <div class="card"><div class="inst" id="inst"></div><canvas id="cv3" width="640" height="200" style="margin-top:10px" aria-label="Đồ thị dao động của nguồn âm"></canvas><div class="note" id="cap3" style="margin-top:6px">Đồ thị: dao động của bộ phận phát âm theo thời gian.</div></div>
+    <div class="card qcard"><span class="q">Điểm chung của mọi nguồn âm là gì?</span><div id="q3"></div><div class="fb" id="f3"></div><div class="note">Đã thử: <b id="tried3">0</b>/4 nguồn âm</div></div>
+  </div>
+  <details class="tnote"><summary>Gợi ý cho giáo viên</summary>Thí nghiệm thật đi kèm (SGK): gảy đàn, gõ âm thoa. Có thể đặt vài hạt gạo/giấy vụn trên mặt trống, hoặc chạm nhẹ âm thoa đang kêu vào mặt nước để thấy dao động. Mặt trống, dây đàn, cột không khí trong ống sáo, hai nhánh âm thoa đều dao động.</details>
+</section>
+
+<!-- C4 -->
+<section class="view" id="v-c4" hidden>
+  <div class="vhead"><h2>Hồ sơ 4 · Sóng âm đi qua không khí</h2><span class="tag">III Sóng âm · Hình 12.5</span></div>
+  <p class="goal"><b>Thí nghiệm:</b> bật loa, quan sát các lớp không khí bị nén, dãn và truyền dao động tới tai. Bật “Theo dõi một hạt không khí” để xem hạt đó có chạy tới tai không.</p>
+  <div class="card"><canvas id="cv4" width="900" height="300" aria-label="Màng loa dao động làm các lớp không khí nén, dãn lan truyền tới tai"></canvas>
+    <div class="ctl"><label>Tần số (dao động nhanh/chậm)<input type="range" id="fr4" min="1" max="4" step="0.5" value="2"></label><label>Biên độ (to/nhỏ)<input type="range" id="am4" min="2" max="9" step="1" value="6"></label>
+      <label>Điều khiển<span class="row"><button class="btn pri" id="on4">Bật loa</button><label style="flex-direction:row;font-weight:600;gap:6px"><input type="checkbox" id="trk4"> Theo dõi một hạt</label><label style="flex-direction:row;font-weight:600;gap:6px"><input type="checkbox" id="snd4" checked> Phát âm thanh</label></span></label></div></div>
+  <div class="two" style="margin-top:14px">
+    <div class="card"><b>Sắp xếp các bước để giải thích vì sao ta nghe được âm từ loa</b><ol class="order" id="ord4" style="padding:0;margin:8px 0 0"></ol><div class="row" style="margin-top:8px"><button class="btn pri" id="chk4">Kiểm tra</button><span class="fb" id="f4"></span></div></div>
+    <div class="card"><b>Nhật kí quan sát</b><ul id="log4" class="note" style="padding-left:18px;margin:6px 0 0"><li>Bấm “Bật loa” để bắt đầu.</li></ul></div>
+  </div>
+  <details class="tnote"><summary>Gợi ý cho giáo viên</summary>Đây là trọng tâm yêu cầu cần đạt “Giải thích được sự truyền sóng âm trong không khí”. Mô hình hạt minh hoạ các lớp không khí nén – dãn; hạt chỉ dao động quanh vị trí của nó. Có thể cho học sinh đóng vai “lớp không khí” đứng thành hàng, đẩy nhẹ vai nhau để mô phỏng.</details>
+</section>
+
+<!-- C5 -->
+<section class="view" id="v-c5" hidden>
+  <div class="vhead"><h2>Hồ sơ 5 · Âm truyền qua những môi trường nào?</h2><span class="tag">IV Môi trường truyền âm · Hình 12.6–12.8</span></div>
+  <div class="row" style="margin-bottom:10px"><span class="seg" id="seg5"><button data-t="cup" class="on">Rắn · Điện thoại cốc giấy</button><button data-t="tank">Lỏng · Đồng hồ trong nước</button><button data-t="jar">Khí & chân không · Bình hút khí</button></span></div>
+  <div class="two">
+    <div class="card"><canvas id="cv5" width="640" height="360" aria-label="Thí nghiệm môi trường truyền âm"></canvas><div class="ctl" id="ctl5"></div></div>
+    <div class="card qcard"><span class="q" id="q5t"></span><div id="q5"></div><div class="fb" id="f5"></div><div class="note">Kết luận đã rút ra: <b id="done5">0</b>/3</div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><b>Em có biết?</b> Tốc độ truyền âm (gần đúng, ở nhiệt độ phòng) – âm truyền trong chất rắn nhanh hơn trong chất lỏng, trong chất lỏng nhanh hơn trong chất khí:
+    <div class="speeds" style="margin-top:8px"><div><span>Không khí</span><i style="width:6%"></i><span>≈ 340 m/s</span></div><div><span>Nước</span><i style="width:25%"></i><span>≈ 1 500 m/s</span></div><div><span>Thép</span><i style="width:100%"></i><span>≈ 6 000 m/s</span></div><div><span>Chân không</span><i style="width:0;background:none"></i><span>không truyền</span></div></div></div>
+  <details class="tnote"><summary>Gợi ý cho giáo viên</summary>Ba thí nghiệm ứng với Hình 12.6 (rắn), 12.7 (lỏng), 12.8 (khí, chân không). Nên làm thật trò chơi điện thoại cốc giấy. Ở bình hút khí, kéo thanh trượt hút dần không khí: âm nhỏ dần rồi tắt hẳn vì không còn chất để truyền dao động. Tốc độ âm là kiến thức mở rộng (Em có biết).</details>
+</section>
+
+<!-- C6 -->
+<section class="view" id="v-c6" hidden>
+  <div class="vhead"><h2>Hồ sơ 6 · Phá án</h2><span class="tag">Câu hỏi mở đầu · Em có thể</span></div>
+  <p class="goal"><b>Mô phỏng:</b> bấm “Cho ngựa phi” để xem âm thanh vó ngựa truyền tới người trinh sát theo hai đường: qua mặt đất và qua không khí.</p>
+  <div class="card"><canvas id="cv6" width="900" height="260" aria-label="Âm vó ngựa truyền qua đất và qua không khí tới người trinh sát"></canvas><div class="row" style="margin-top:8px"><button class="btn pri" id="run6">Cho ngựa phi</button><span class="note" id="cap6"></span></div></div>
+  <div class="two" style="margin-top:14px">
+    <div class="card qcard"><span class="q">1. Vì sao áp tai xuống đất nghe được tiếng vó ngựa từ xa? (chọn 2 ý đúng)</span><div id="q6a"></div><button class="btn pri" id="chk6a" style="align-self:flex-start">Kiểm tra</button><div class="fb" id="f6a"></div></div>
+    <div class="card qcard"><span class="q">2. Em có thể: vì sao không nghe được tiếng chuông đồng hồ đặt trong bình chân không (Hình 12.8)?</span><div id="q6b"></div><div class="fb" id="f6b"></div></div>
+  </div>
+  <div class="case" id="case" style="margin-top:14px" hidden></div>
+  <details class="tnote"><summary>Gợi ý cho giáo viên</summary>Hồ sơ tổng kết: học sinh vận dụng các manh mối để trả lời câu hỏi mở đầu và câu hỏi “Em có thể” của bài. Mô phỏng chỉ minh hoạ định tính: âm truyền trong đất nhanh hơn và ít bị tắt dần hơn trong không khí.</details>
+</section>
+
+<!-- INFO -->
+<section class="view" id="v-info" hidden>
+  <div class="card"><span class="tag">Thông tin học liệu (theo Công văn 5158/SGDĐT-GDTrH)</span><h2 style="font-size:28px;margin:10px 0">Trinh Sát Âm Thanh</h2><div style="overflow-x:auto"><table class="info" id="infoT"></table></div></div>
+</section>
+</main>
+</div>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const TAU=Math.PI*2;
+/* ---------- audio ---------- */
+let AC=null,master=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.8;master.connect(AC.destination)}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function tone(f,d,type='sine',v=.15,w=0){const a=ac();if(!a)return;const t=a.currentTime+w,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0005,t+d);o.connect(g).connect(master);o.start(t);o.stop(t+d+.02)}
+const ding=()=>{tone(880,.15,'triangle',.12);tone(1320,.25,'triangle',.1,.08)},oops=()=>tone(170,.2,'square',.04);
+function noiseBuf(sec){const a=ac();const n=a.sampleRate*sec,b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;return b}
+function drum(){const a=ac();if(!a)return;const t=a.currentTime;const o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(55,t+.4);g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+.5);o.connect(g).connect(master);o.start(t);o.stop(t+.52);const s=a.createBufferSource();s.buffer=noiseBuf(.2);const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=1200;const g2=a.createGain();g2.gain.setValueAtTime(.4,t);g2.gain.exponentialRampToValueAtTime(.001,t+.2);s.connect(f).connect(g2).connect(master);s.start(t)}
+function pluck(freq=196){const a=ac();if(!a)return;const N=Math.round(a.sampleRate/freq),len=a.sampleRate*1.6,b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<N;i++)d[i]=Math.random()*2-1;for(let i=N;i<len;i++)d[i]=.996*.5*(d[i-N]+d[i-N+1]);const s=a.createBufferSource();s.buffer=b;const g=a.createGain();g.gain.value=.5;s.connect(g).connect(master);s.start()}
+function flute(){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain(),l=a.createOscillator(),lg=a.createGain();o.type='sine';o.frequency.value=659;l.frequency.value=5.5;lg.gain.value=6;l.connect(lg).connect(o.frequency);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.25,t+.12);g.gain.setValueAtTime(.25,t+1);g.gain.exponentialRampToValueAtTime(.001,t+1.4);const s=a.createBufferSource();s.buffer=noiseBuf(1.4);const bf=a.createBiquadFilter();bf.type='bandpass';bf.frequency.value=2500;const ng=a.createGain();ng.gain.value=.025;s.connect(bf).connect(ng).connect(master);o.connect(g).connect(master);o.start(t);l.start(t);s.start(t);o.stop(t+1.45);l.stop(t+1.45)}
+function fork(){tone(440,2.2,'sine',.3)}
+function hoof(when=0,v=.5){const a=ac();if(!a)return;const t=a.currentTime+when;const s=a.createBufferSource();s.buffer=noiseBuf(.08);const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=700;const g=a.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.08);s.connect(f).connect(g).connect(master);s.start(t)}
+
+/* ---------- fx ---------- */
+const fx=$('#fx'),fc=fx.getContext('2d');let P=[],run=false;const rs=()=>{fx.width=innerWidth;fx.height=innerHeight};addEventListener('resize',rs);rs();
+function burst(){const c=['#E8762B','#1F8A8A','#22395B','#F2C14E','#C8443A'];for(let i=0;i<110;i++){const a=Math.random()*TAU,s=3+Math.random()*8;P.push({x:innerWidth/2,y:innerHeight*.35,vx:Math.cos(a)*s,vy:Math.sin(a)*s-3,c:c[i%5],l:100,r:Math.random()*6})}if(!run){run=true;requestAnimationFrame(st)}}
+function st(){fc.clearRect(0,0,fx.width,fx.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.25;p.l--;p.r+=.2;fc.save();fc.translate(p.x,p.y);fc.rotate(p.r);fc.fillStyle=p.c;fc.fillRect(-5,-2,10,4);fc.restore()});P=P.filter(p=>p.l>0);if(P.length)requestAnimationFrame(st);else{run=false;fc.clearRect(0,0,fx.width,fx.height)}}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2800)}
+
+/* ---------- clues ---------- */
+const CLUES={1:'Vật chuyển động qua lại quanh vị trí cân bằng là đang dao động.',2:'Sóng là sự lan truyền dao động trong môi trường; phần tử môi trường chỉ dao động tại chỗ.',3:'Mọi nguồn âm đều dao động.',4:'Sóng âm là sự lan truyền dao động của nguồn âm trong môi trường: không khí nén, dãn liên tiếp truyền tới tai làm màng nhĩ dao động.',5:'Âm truyền được trong chất rắn, lỏng, khí; không truyền được trong chân không.',6:'Áp tai xuống đất: âm truyền qua đất (chất rắn) tới tai tốt hơn, nhanh hơn qua không khí.'};
+let got={};try{got=JSON.parse(localStorage.getItem('tsat-clues')||'{}')}catch(e){}
+function renderClues(){$$('.clue').forEach(c=>c.classList.toggle('got',!!got[c.dataset.c]));renderFiles()}
+function clue(n){if(got[n])return;got[n]=1;try{localStorage.setItem('tsat-clues',JSON.stringify(got))}catch(e){}renderClues();burst();[523,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.12,i*.09));toast(`Manh mối ${n}: ${CLUES[n]}`)}
+function mcq(el,fb,opts,ans,okMsg,clueN,hint){$(el).innerHTML=opts.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join('');const bs=$$(el+' .opt');
+ bs.forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i===ans){b.classList.add('right');bs.forEach(x=>x.disabled=true);$(fb).className='fb ok';$(fb).textContent=okMsg;ding();if(clueN)clue(clueN)}else{b.classList.add('wrong');b.disabled=true;$(fb).className='fb no';$(fb).textContent=hint||'Chưa đúng, quan sát lại mô phỏng nhé.';oops()}})}
+
+/* ---------- nav ---------- */
+const FILES=[['intro','?','Bí ẩn tiếng vó ngựa','Hồ sơ mở'],['c1','1','Thanh thép dao động','Dao động'],['c2','2','Từ dao động đến sóng','Sóng'],['c3','3','Nguồn âm','Nguồn âm'],['c4','4','Sóng âm qua không khí','Sóng âm'],['c5','5','Môi trường truyền âm','Rắn · lỏng · khí'],['c6','6','Phá án','Vận dụng'],['info','i','Thông tin học liệu','Công văn 5158']];
+let cur='intro';
+function renderFiles(){$('#files').innerHTML=FILES.map(f=>`<button class="file ${f[0]===cur?'on':''} ${got[f[1]]?'done':''}" data-go="${f[0]}"><span class="n">${got[f[1]]?'✓':f[1]}</span><span>${f[2]}<small>${f[3]}</small></span></button>`).join('');$$('#files .file').forEach(b=>b.onclick=()=>go(b.dataset.go))}
+function go(v){cur=v;$$('.view').forEach(x=>x.hidden=x.id!=='v-'+v);renderFiles();if(v!=='c4')stop4();if(v==='c5')setup5();try{history.replaceState(null,'','#'+v)}catch(e){}if(innerWidth<920)scrollTo(0,0)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b&&!b.classList.contains('file')){ac();go(b.dataset.go)}});
+
+/* ---------- canvas helpers ---------- */
+function ctx(id){return $(id).getContext('2d')}
+function evPt(cv,e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height}}
+const INK='#2B2118',OR='#E8762B',TE='#1F8A8A',NV='#22395B';
+function txt(c,s,x,y,o={}){c.font=`${o.w||600} ${o.s||15}px Be Vietnam Pro, Arial`;c.fillStyle=o.c||INK;c.textAlign=o.a||'left';c.fillText(s,x,y)}
+
+/* ---------- INTRO canvas ---------- */
+let introT=0;
+function drawIntro(t){const c=ctx('#cvIntro');c.clearRect(0,0,520,300);c.fillStyle='#E9F2F6';c.fillRect(0,0,520,190);c.fillStyle='#C9A776';c.fillRect(0,190,520,110);
+ for(let i=0;i<5;i++){const x=40+i*28;c.fillStyle='#B48D5C';c.fillRect(x,240+((i*37)%30),18,4)}
+ // horses far right moving
+ for(let k=0;k<3;k++){const x=430-((t*20+k*40)%60)+k*28,y=176-(k%2)*4;const b=Math.sin(t*12+k)*2;c.fillStyle='#5B4636';c.beginPath();c.ellipse(x,y+b,13,6,0,0,TAU);c.fill();c.fillRect(x+9,y-10+b,4,10);c.beginPath();c.ellipse(x+14,y-11+b,5,3,0,0,TAU);c.fill();for(let l=0;l<4;l++)c.fillRect(x-9+l*6,y+4+b,2,9+Math.sin(t*14+l)*2)}
+ // ground waves
+ for(let r=0;r<4;r++){const rr=((t*90+r*80)%320);c.strokeStyle=`rgba(232,118,43,${Math.max(0,.7-rr/360)})`;c.lineWidth=2;c.beginPath();c.arc(430,196,rr,Math.PI*0.95,Math.PI*1.0+.02,false);c.stroke();c.beginPath();c.moveTo(430-rr,200+r%2*6);c.lineTo(430-rr+10,200+r%2*6);c.stroke()}
+ // scout lying, ear to ground
+ c.fillStyle='#3E5C76';c.fillRect(60,176,90,16);c.fillStyle='#F1C9A0';c.beginPath();c.arc(156,178,12,0,TAU);c.fill();c.fillStyle='#2B2118';c.beginPath();c.arc(158,172,12,Math.PI,TAU);c.fill();c.fillStyle='#F1C9A0';c.beginPath();c.ellipse(152,188,4,5,0,0,TAU);c.fill();
+ txt(c,'?',180,150,{s:40,w:800,c:OR});txt(c,'vài km',300,140,{s:14,c:'#6B5B4B'});c.strokeStyle='#6B5B4B';c.setLineDash([5,5]);c.beginPath();c.moveTo(170,150);c.lineTo(410,150);c.stroke();c.setLineDash([])}
+$('#introPlay').onclick=()=>{ac();for(let i=0;i<12;i++){hoof(i*.18,.35+.3*(i%2));}};
+
+/* ---------- C1 bar ---------- */
+const S1={y:0,v:0,drag:false,count:0,lastSign:0,len:.85};
+const cv1=$('#cv1');
+function bar1(){const c=ctx('#cv1'),W=640,H=340,Bx=520,By=170,L=380*S1.len,Ax=Bx-L;c.clearRect(0,0,W,H);
+ // stand
+ c.fillStyle='#8A7A66';c.fillRect(Bx+20,40,12,270);c.fillRect(Bx-40,300,140,14);c.fillStyle='#6B5B4B';c.fillRect(Bx-6,By-14,40,28);
+ // O line
+ c.strokeStyle='#C9B99E';c.setLineDash([6,6]);c.beginPath();c.moveTo(Ax-40,By);c.lineTo(Bx,By);c.stroke();c.setLineDash([]);txt(c,'O',Ax-58,By+5,{w:700,c:'#6B5B4B'});
+ // ghost envelope
+ const y=S1.y;
+ c.strokeStyle='rgba(232,118,43,.18)';c.lineWidth=6;[-1,1].forEach(s=>{const amp=Math.abs(S1.amp||0)*s;if(Math.abs(amp)>2){c.beginPath();c.moveTo(Bx,By);c.quadraticCurveTo((Ax+Bx)/2,By,Ax,By+amp);c.stroke()}});
+ c.strokeStyle=INK;c.lineWidth=7;c.lineCap='round';c.beginPath();c.moveTo(Bx,By);c.quadraticCurveTo((Ax+Bx)/2,By,Ax,By+y);c.stroke();
+ c.fillStyle=OR;c.beginPath();c.arc(Ax,By+y,10,0,TAU);c.fill();txt(c,'A',Ax-6,By+y-16,{w:800});txt(c,'B',Bx+4,By-20,{w:800});
+ // arrows
+ if(Math.abs(S1.v)>1){c.strokeStyle=TE;c.lineWidth=2;const d=Math.sign(S1.v)*20;c.beginPath();c.moveTo(Ax-28,By+y);c.lineTo(Ax-28,By+y+d);c.stroke()}
+ if(!S1.drag&&Math.abs(S1.y)<1&&Math.abs(S1.v)<1)txt(c,'Kéo đầu A xuống rồi thả tay',Ax-20,60,{c:'#6B5B4B'})}
+function step1(dt){if(S1.drag)return;const k=1/(S1.len*S1.len)*1.6,w=Math.sqrt(k)*9;const a=-w*w*S1.y-2*0.35*S1.v;S1.v+=a*dt;S1.y+=S1.v*dt;S1.amp=Math.max(Math.abs(S1.y),(S1.amp||0)*.995);
+ const sg=Math.sign(S1.y);if(sg!==0&&sg!==S1.lastSign&&Math.abs(S1.v)>8){if(S1.lastSign===1){S1.count++;$('#cnt1').textContent=S1.count+' lần qua lại';tone(150+30/S1.len,.05,'sine',.05)}S1.lastSign=sg}
+ if(S1.count>=3&&!S1.asked){S1.asked=1}}
+cv1.addEventListener('pointerdown',e=>{ac();const p=evPt(cv1,e);const Ax=520-380*S1.len;if(Math.hypot(p.x-Ax,p.y-(170+S1.y))<50){S1.drag=true;cv1.setPointerCapture(e.pointerId)}});
+cv1.addEventListener('pointermove',e=>{if(!S1.drag)return;const p=evPt(cv1,e);S1.y=Math.max(-110,Math.min(110,p.y-170));S1.v=0;S1.amp=Math.abs(S1.y)});
+cv1.addEventListener('pointerup',()=>{S1.drag=false});
+$('#pluck1').onclick=()=>{ac();S1.y=90;S1.v=0;S1.amp=90};
+$('#len1').oninput=e=>{S1.len=+e.target.value};
+mcq('#q1','#f1',['Chuyển động thẳng','Dao động','Sóng','Chuyển động tròn'],1,'Đúng! Chuyển động qua lại quanh một vị trí cân bằng gọi là dao động. Thanh càng ngắn dao động càng nhanh.',1);
+
+/* ---------- C2 waves ---------- */
+const S2={mode:'water',t0:null};
+$$('#seg2 button').forEach(b=>b.onclick=()=>{$$('#seg2 button').forEach(x=>x.classList.toggle('on',x===b));S2.mode=b.dataset.t;S2.t0=null;cap2()});
+$('#run2').onclick=()=>{ac();S2.t0=performance.now()/1000;tone(220,.3,'sine',.06)};
+function cap2(){$('#cap2').textContent=S2.mode==='water'?'Nhìn từ trên xuống: vòng sóng tròn lan ra từ S. Chiếc phao (màu cam) chỉ nhấp nhô lên xuống tại chỗ – thanh đo bên phải cho thấy độ cao của phao.':'Tay dao động đẩy – kéo một đầu lò xo: xuất hiện những đoạn nén và dãn liên tiếp. Vòng màu đỏ chỉ dao động qua lại quanh vị trí của nó.'}
+cap2();
+function draw2(t){const c=ctx('#cv2'),W=640,H=340;c.clearRect(0,0,W,H);const on=S2.t0!==null,te=on?t-S2.t0:0;
+ if(S2.mode==='water'){c.fillStyle='#D8EEF2';c.fillRect(0,0,W,H);const sx=200,sy=170,v=70,lam=48;
+  if(on){const R=te*v;for(let r=R%lam;r<Math.min(R,420);r+=lam){c.strokeStyle=`rgba(31,138,138,${Math.max(0,.85-r/420)})`;c.lineWidth=3;c.beginPath();c.arc(sx,sy,r,0,TAU);c.stroke()}}
+  c.fillStyle='#E8762B';c.beginPath();c.arc(sx,sy,6,0,TAU);c.fill();txt(c,'S',sx-20,sy-10,{w:800});
+  const fxp=420,d=fxp-sx;let h=0;if(on&&te*v>d)h=Math.sin(TAU*(te*v-d)/lam)*Math.min(1,(te*v-d)/lam);
+  c.fillStyle=OR;c.beginPath();c.arc(fxp,sy,10+h*3,0,TAU);c.fill();c.strokeStyle=INK;c.lineWidth=2;c.stroke();txt(c,'phao',fxp-14,sy+32,{s:13});
+  c.fillStyle='#FFFDF8';c.fillRect(560,60,50,220);c.strokeStyle='#C9B99E';c.strokeRect(560,60,50,220);c.beginPath();c.moveTo(560,170);c.lineTo(610,170);c.setLineDash([4,4]);c.stroke();c.setLineDash([]);c.fillStyle=OR;c.beginPath();c.arc(585,170-h*60,9,0,TAU);c.fill();txt(c,'độ cao phao',585,300,{s:12,a:'center',c:'#6B5B4B'});
+  c.strokeStyle='rgba(43,33,24,.3)';c.setLineDash([3,4]);c.beginPath();c.moveTo(fxp,sy-50);c.lineTo(fxp,sy-20);c.stroke();c.setLineDash([]);txt(c,'phao vẫn ở đây',fxp,sy-56,{s:12,a:'center',c:'#6B5B4B'})}
+ else{c.fillStyle='#FFFDF8';c.fillRect(0,0,W,H);const N=46,x0=70,dx=11.5,y=170,v=150,lam=110;const hand=on?Math.sin(TAU*te*v/lam)*10:0;
+  c.fillStyle='#F1C9A0';c.beginPath();c.ellipse(40+hand,y,18,26,0,0,TAU);c.fill();
+  for(let i=0;i<N;i++){const X=x0+i*dx,d=X-x0;let s=0;if(on&&te*v>d)s=Math.sin(TAU*(te*v-d)/lam)*10*Math.min(1,(te*v-d)/40);const xi=X+s;const red=i===22;c.strokeStyle=red?'#C8443A':'#6B5B4B';c.lineWidth=red?4:2.2;c.beginPath();c.ellipse(xi,y,4,34,0,0,TAU);c.stroke()}
+
+  const redX=x0+22*dx;c.strokeStyle='rgba(200,68,58,.4)';c.setLineDash([4,4]);c.beginPath();c.moveTo(redX,y+45);c.lineTo(redX,y+70);c.stroke();c.setLineDash([]);txt(c,'vị trí ban đầu của vòng đỏ',redX,y+88,{s:13,a:'center',c:'#C8443A'});
+  if(on&&te>2){txt(c,'← nén →  ← dãn →',W/2,70,{s:14,a:'center',c:TE,w:700})}}}
+mcq('#q2','#f2',['bị sóng đẩy đi theo hướng truyền sóng','chỉ dao động quanh vị trí của nó, không bị cuốn đi','đứng yên hoàn toàn','chìm xuống đáy'],1,'Chính xác! Sóng truyền dao động đi xa, còn các phần tử môi trường chỉ dao động tại chỗ.',2);
+
+/* ---------- C3 sources ---------- */
+const INST=[['drum','Mặt trống','<ellipse cx="45" cy="34" rx="34" ry="10" fill="#F3EAD7" stroke="#2B2118" stroke-width="3"/><path d="M11 34 V66 Q45 80 79 66 V34" fill="#E8762B" stroke="#2B2118" stroke-width="3"/><path d="M20 40 L30 66 M45 44 V72 M70 40 L60 66" stroke="#2B2118" stroke-width="2"/>'],
+ ['string','Dây đàn','<path d="M20 80 Q8 60 22 46 Q10 30 30 20 L62 20 Q80 30 68 46 Q82 60 70 80 Z" fill="#E8B26B" stroke="#2B2118" stroke-width="3"/><circle cx="45" cy="52" r="9" fill="#2B2118"/><path id="str" d="M40 6 V88 M45 6 V88 M50 6 V88" stroke="#6B5B4B" stroke-width="1.5"/>'],
+ ['flute','Cây sáo','<rect x="6" y="40" width="80" height="12" rx="6" fill="#C9A776" stroke="#2B2118" stroke-width="3"/><circle cx="20" cy="46" r="3" fill="#2B2118"/><circle cx="40" cy="46" r="2.5" fill="#2B2118"/><circle cx="52" cy="46" r="2.5" fill="#2B2118"/><circle cx="64" cy="46" r="2.5" fill="#2B2118"/><circle cx="76" cy="46" r="2.5" fill="#2B2118"/>'],
+ ['fork','Âm thoa','<rect x="30" y="72" width="30" height="14" fill="#8A6A44" stroke="#2B2118" stroke-width="2"/><path d="M45 72 V54 M45 54 Q34 54 34 40 V8 M45 54 Q56 54 56 40 V8" fill="none" stroke="#6B7A8A" stroke-width="6" stroke-linecap="round"/>']];
+const PART={drum:'Mặt trống dao động',string:'Dây đàn dao động',flute:'Cột không khí trong ống sáo dao động',fork:'Hai nhánh âm thoa dao động'};
+let tried={},wave3={f:0,t0:0,decay:1,name:''};
+$('#inst').innerHTML=INST.map(i=>`<button data-k="${i[0]}"><svg viewBox="0 0 90 90" aria-hidden="true">${i[2]}</svg>${i[1]}</button>`).join('');
+$$('#inst button').forEach(b=>b.onclick=()=>{ac();const k=b.dataset.k;b.querySelector('svg').classList.remove('shake');void b.offsetWidth;b.querySelector('svg').classList.add('shake');
+ ({drum,string:()=>pluck(196),flute,fork})[k]();wave3={k,t0:performance.now()/1000,f:{drum:3,string:6,flute:9,fork:12}[k],decay:{drum:3,string:.8,flute:.15,fork:.35}[k],name:PART[k]};tried[k]=1;$('#tried3').textContent=Object.keys(tried).length;$('#cap3').textContent=PART[k]+' → phát ra âm.'});
+function draw3(t){const c=ctx('#cv3'),W=640,H=200;c.clearRect(0,0,W,H);c.strokeStyle='#E2D5BD';c.beginPath();c.moveTo(0,100);c.lineTo(W,100);c.stroke();if(!wave3.k){txt(c,'Bấm một nguồn âm để xem dao động',W/2,105,{a:'center',c:'#6B5B4B'});return}
+ const te=t-wave3.t0;c.strokeStyle=OR;c.lineWidth=3;c.beginPath();for(let x=0;x<W;x++){const tt=te-(W-x)/220;const env=tt<0?0:Math.exp(-wave3.decay*tt)*(wave3.k==='flute'&&tt>1.2?Math.max(0,1-(tt-1.2)*4):1);const y=100-Math.sin(TAU*wave3.f*tt)*70*env;x?c.lineTo(x,y):c.moveTo(x,y)}c.stroke();txt(c,wave3.name,10,24,{w:700,c:TE})}
+mcq('#q3','#f3',['Đều làm bằng kim loại','Đều dao động','Đều có dây','Đều phải thổi hơi'],1,'Đúng! Nguồn âm là nguồn phát ra âm, các nguồn âm đều dao động.',3);
+
+/* ---------- C4 air ---------- */
+const S4={on:false,t0:0,osc:null,g:null};
+function startSnd4(){const a=ac();if(!a||S4.osc)return;S4.osc=a.createOscillator();S4.g=a.createGain();S4.osc.type='sine';S4.g.gain.value=0;S4.osc.connect(S4.g).connect(master);S4.osc.start();upd4()}
+function upd4(){if(!S4.osc)return;const f=+$('#fr4').value,amp=+$('#am4').value;S4.osc.frequency.setTargetAtTime(110*f+110,AC.currentTime,.05);S4.g.gain.setTargetAtTime(S4.on&&$('#snd4').checked?amp/9*.22:0,AC.currentTime,.05)}
+function stop4(){S4.on=false;$('#on4')&&($('#on4').textContent='Bật loa');if(S4.g)S4.g.gain.setTargetAtTime(0,AC.currentTime,.05)}
+$('#on4').onclick=()=>{ac();S4.on=!S4.on;$('#on4').textContent=S4.on?'Tắt loa':'Bật loa';if(S4.on){S4.t0=performance.now()/1000;startSnd4();logs4=[];addLog('Màng loa bắt đầu dao động (nén – dãn lớp không khí sát nó).')}upd4()};
+['fr4','am4'].forEach(id=>$('#'+id).oninput=()=>{upd4();addLog(id==='fr4'?'Tăng/giảm tần số: màng loa dao động nhanh/chậm hơn, các lớp nén – dãn sát nhau/thưa hơn.':'Tăng/giảm biên độ: màng loa dao động mạnh/yếu hơn, âm to/nhỏ hơn.')});
+$('#snd4').onchange=upd4;
+let logs4=[];function addLog(s){if(logs4[logs4.length-1]===s)return;logs4.push(s);logs4=logs4.slice(-5);$('#log4').innerHTML=logs4.map(x=>`<li>${x}</li>`).join('')}
+const AIR=[];for(let r=0;r<11;r++)for(let i=0;i<64;i++)AIR.push({x0:150+i*10.5+(r%2)*5,y0:50+r*20});
+let reached4=false,ear4=false;
+function draw4(t){const c=ctx('#cv4'),W=900,H=300;c.clearRect(0,0,W,H);c.fillStyle='#FFFDF8';c.fillRect(0,0,W,H);
+ const f=+$('#fr4').value*0.8,A=+$('#am4').value,v=140,lam=v/f;const te=S4.on?t-S4.t0:-1;
+ const mem=S4.on?Math.sin(TAU*f*te)*A*1.1:0;
+ // speaker
+ c.fillStyle='#2B2118';c.fillRect(60,110,40,80);c.beginPath();c.moveTo(100,110);c.lineTo(128+mem,60);c.lineTo(128+mem,240);c.lineTo(100,190);c.closePath();c.fillStyle='#6B5B4B';c.fill();c.strokeStyle=OR;c.lineWidth=4;c.beginPath();c.moveTo(130+mem,60);c.lineTo(130+mem,240);c.stroke();txt(c,'Màng loa',60,268,{s:13,w:700});
+ // particles
+ const front=S4.on?te*v:0;
+ AIR.forEach((p,k)=>{const d=p.x0-140;let s=0;if(S4.on&&front>d)s=Math.sin(TAU*(f*te-d/lam))*A*Math.min(1,(front-d)/30);const x=p.x0+s;const trk=$('#trk4').checked&&k===5*64+26;c.fillStyle=trk?'#C8443A':'rgba(34,57,91,.55)';c.beginPath();c.arc(x,p.y0,trk?5.5:3,0,TAU);c.fill();if(trk){c.strokeStyle='rgba(200,68,58,.5)';c.setLineDash([3,3]);c.beginPath();c.moveTo(p.x0,p.y0-14);c.lineTo(p.x0,p.y0+14);c.stroke();c.setLineDash([])}});
+ // ear
+ const earD=830-140;let ed=0;if(S4.on&&front>earD){ed=Math.sin(TAU*(f*te-earD/lam))*A*.8;if(!reached4){reached4=true;addLog('Dao động truyền tới tai: màng nhĩ bắt đầu dao động → ta nghe thấy âm.')}}
+ c.fillStyle='#F1C9A0';c.beginPath();c.ellipse(860,150,26,56,0,0,TAU);c.fill();c.strokeStyle='#C58F64';c.lineWidth=3;c.beginPath();c.arc(860,150,30,Math.PI*.6,Math.PI*1.4);c.stroke();
+ c.strokeStyle='#C8443A';c.lineWidth=4;c.beginPath();c.moveTo(836+ed,128);c.lineTo(836+ed,172);c.stroke();txt(c,'Màng nhĩ',800,268,{s:13,w:700});
+
+ if(!S4.on)txt(c,'Bấm “Bật loa”',W/2,24,{a:'center',c:'#6B5B4B'});else txt(c,'Lớp không khí bị nén (hạt dày) và dãn (hạt thưa) liên tiếp lan về phía tai',W/2,24,{a:'center',c:TE,w:700,s:14})}
+$('#trk4').onchange=()=>{if($('#trk4').checked)addLog('Hạt không khí màu đỏ chỉ dao động qua lại quanh vị trí của nó – nó không chạy tới tai.')};
+const ORD=['Màng loa dao động','Lớp không khí sát màng loa dao động (bị nén, dãn)','Các lớp không khí kế tiếp lần lượt dao động, truyền dao động đi xa','Dao động truyền tới tai làm màng nhĩ dao động – ta nghe thấy âm'];
+let ord=[2,0,3,1];
+function rOrd(mark){$('#ord4').innerHTML=ord.map((e,p)=>`<li class="${mark?(e===p?'ok':'no'):''}"><span class="n">${p+1}</span><span class="t">${ORD[e]}</span><button data-p="${p}" data-d="-1" ${p===0?'disabled':''} aria-label="Lên">▲</button><button data-p="${p}" data-d="1" ${p===3?'disabled':''} aria-label="Xuống">▼</button></li>`).join('');$$('#ord4 button').forEach(b=>b.onclick=()=>{const p=+b.dataset.p,q=p+ +b.dataset.d;[ord[p],ord[q]]=[ord[q],ord[p]];$('#f4').textContent='';rOrd()})}
+rOrd();$('#chk4').onclick=()=>{const n=ord.filter((e,p)=>e===p).length;rOrd(true);if(n===4){$('#f4').className='fb ok';$('#f4').textContent='Chính xác! Em đã giải thích được sự truyền sóng âm trong không khí.';ding();clue(4)}else{$('#f4').className='fb no';$('#f4').textContent=`Đúng ${n}/4 bước. Quan sát lại mô phỏng: bắt đầu từ nguồn âm.`;oops()}};
+
+/* ---------- C5 media ---------- */
+const S5={mode:'cup',taut:true,near:true,speak:0,depth:0,ring:false,air:1,done:{}};
+let ringNode=null;
+function ringStart(){const a=ac();if(!a||ringNode)return;const o=a.createOscillator(),o2=a.createOscillator(),g=a.createGain(),lfo=a.createOscillator(),lg=a.createGain(),lp=a.createBiquadFilter();o.type='square';o.frequency.value=1250;o2.type='square';o2.frequency.value=1580;lfo.type='square';lfo.frequency.value=12;lg.gain.value=.5;const mg=a.createGain();mg.gain.value=.5;lfo.connect(lg).connect(mg.gain);lp.type='lowpass';lp.frequency.value=4000;o.connect(mg);o2.connect(mg);mg.connect(lp).connect(g).connect(master);g.gain.value=0;o.start();o2.start();lfo.start();ringNode={o,o2,lfo,g,lp}}
+function ringUpd(){if(!ringNode)return;let gain=0,cut=4000;if(S5.ring){if(S5.mode==='tank'){gain=.05;cut=S5.depth>0.4?900:4000}else if(S5.mode==='jar'){gain=.06*Math.pow(S5.air,1.5)}}ringNode.g.gain.setTargetAtTime(gain,AC.currentTime,.08);ringNode.lp.frequency.setTargetAtTime(cut,AC.currentTime,.08)}
+const Q5={cup:{t:'Khi dây căng, bạn A nghe được tiếng bạn B; dây chùng hoặc bỏ cốc ra xa tai thì không nghe được. Điều này chứng tỏ:',o:['Âm truyền được trong chất rắn (sợi dây)','Âm chỉ truyền trong không khí','Âm không truyền được trong chất rắn','Cốc giấy tự phát ra âm'],a:0,m:'Đúng! Sợi dây căng (chất rắn) đã truyền âm từ cốc của B sang cốc của A.'},
+ tank:{t:'Khi nhúng hộp đựng đồng hồ báo thức đang kêu vào nước, ta vẫn nghe tiếng chuông. Điều này chứng tỏ:',o:['Âm không truyền được trong chất lỏng','Âm truyền được trong chất lỏng (nước)','Nước làm đồng hồ kêu to hơn','Chỉ cá mới nghe được'],a:1,m:'Đúng! Âm truyền được trong chất lỏng.'},
+ jar:{t:'Khi hút dần không khí ra khỏi bình, tiếng chuông nhỏ dần rồi không nghe thấy nữa. Điều này chứng tỏ:',o:['Đồng hồ đã ngừng kêu','Âm truyền được trong chất khí nhưng không truyền được trong chân không','Âm truyền tốt hơn khi không có không khí','Thành bình chặn mọi âm thanh'],a:1,m:'Đúng! Không khí (chất khí) truyền được âm; trong chân không không có chất để truyền dao động nên âm không truyền được.'}};
+function setup5(){const m=S5.mode;let h='';
+ if(m==='cup')h=`<label>Sợi dây<span class="row"><button class="btn ${S5.taut?'on':''}" id="taut">Kéo căng</button><button class="btn ${!S5.taut?'on':''}" id="slack">Để chùng</button></span></label><label>Bạn A<span class="row"><button class="btn ${S5.near?'on':''}" id="near">Úp cốc vào tai</button><button class="btn ${!S5.near?'on':''}" id="far">Đưa cốc ra xa</button></span></label><label>Thử<button class="btn pri" id="speak">Bạn B nói “A lô!”</button></label>`;
+ if(m==='tank')h=`<label>Hạ đồng hồ xuống nước<input type="range" id="depth" min="0" max="1" step="0.01" value="${S5.depth}"></label><label>Đồng hồ báo thức<button class="btn pri" id="ring">${S5.ring?'Tắt chuông':'Cho chuông kêu'}</button></label>`;
+ if(m==='jar')h=`<label>Máy hút: lượng không khí đã hút ra<input type="range" id="pump" min="0" max="1" step="0.01" value="${1-S5.air}"></label><label>Đồng hồ báo thức<button class="btn pri" id="ring">${S5.ring?'Tắt chuông':'Cho chuông kêu'}</button></label>`;
+ $('#ctl5').innerHTML=h;
+ const B=(id,f)=>{const e=$('#'+id);if(e)e.onclick=f};
+ B('taut',()=>{S5.taut=true;setup5()});B('slack',()=>{S5.taut=false;setup5()});B('near',()=>{S5.near=true;setup5()});B('far',()=>{S5.near=false;setup5()});
+ B('speak',()=>{ac();S5.speak=performance.now()/1000;if(S5.taut&&S5.near){[0,.12].forEach((w,i)=>tone(i?330:392,.18,'sawtooth',.06,w+.35))}});
+ B('ring',()=>{ac();ringStart();S5.ring=!S5.ring;setup5();ringUpd()});
+ const d=$('#depth');if(d)d.oninput=e=>{S5.depth=+e.target.value;ringUpd()};const p=$('#pump');if(p)p.oninput=e=>{S5.air=1-+e.target.value;ringUpd()};
+ const q=Q5[m];$('#q5t').textContent=q.t;$('#f5').textContent='';
+ if(S5.done[m]){$('#q5').innerHTML=`<div class="clipped">${q.m}</div>`}else{mcq('#q5','#f5',q.o,q.a,q.m,0);$$('#q5 .opt')[q.a].addEventListener('click',()=>{S5.done[m]=1;$('#done5').textContent=Object.keys(S5.done).length;if(Object.keys(S5.done).length===3)clue(5)})}
+ ringUpd()}
+$$('#seg5 button').forEach(b=>b.onclick=()=>{$$('#seg5 button').forEach(x=>x.classList.toggle('on',x===b));S5.mode=b.dataset.t;if(S5.mode==='cup')S5.ring=false;setup5()});
+function kid(c,x,y,col,flip){c.save();c.translate(x,y);if(flip)c.scale(-1,1);c.fillStyle=col;c.fillRect(-18,10,36,60);c.fillStyle='#F1C9A0';c.beginPath();c.arc(0,-10,22,0,TAU);c.fill();c.fillStyle='#2B2118';c.beginPath();c.arc(0,-16,22,Math.PI,TAU);c.fill();c.restore()}
+function clock(c,x,y,s=1,shake=0){c.save();c.translate(x+shake,y);c.scale(s,s);c.fillStyle='#F2C14E';c.beginPath();c.arc(-14,-22,9,0,TAU);c.arc(14,-22,9,0,TAU);c.fill();c.fillStyle='#E8762B';c.beginPath();c.arc(0,0,22,0,TAU);c.fill();c.fillStyle='#FFFDF8';c.beginPath();c.arc(0,0,16,0,TAU);c.fill();c.strokeStyle=INK;c.lineWidth=2;c.beginPath();c.moveTo(0,0);c.lineTo(0,-10);c.moveTo(0,0);c.lineTo(7,4);c.stroke();c.restore()}
+function draw5(t){const c=ctx('#cv5'),W=640,H=360;c.clearRect(0,0,W,H);c.fillStyle='#FFFDF8';c.fillRect(0,0,W,H);const m=S5.mode;
+ if(m==='cup'){c.fillStyle='rgba(140,200,210,.35)';c.fillRect(310,40,22,260);txt(c,'Tấm ngăn cách',321,326,{s:12,a:'center',c:'#6B5B4B'});
+  kid(c,90,170,'#3E7CB1',false);kid(c,550,170,'#F2C14E',true);const ax=S5.near?118:150,ay=160,bx=520,by=166;
+  c.fillStyle='#E8762B';c.beginPath();c.moveTo(ax,ay-14);c.lineTo(ax+26,ay-18);c.lineTo(ax+26,ay+18);c.lineTo(ax,ay+14);c.fill();c.beginPath();c.moveTo(bx,by-14);c.lineTo(bx-26,by-18);c.lineTo(bx-26,by+18);c.lineTo(bx,by+14);c.fill();
+  const x1=ax+26,x2=bx-26;c.strokeStyle='#6B5B4B';c.lineWidth=2;c.beginPath();c.moveTo(x1,ay);if(S5.taut)c.lineTo(x2,by);else c.quadraticCurveTo((x1+x2)/2,300,x2,by);c.stroke();
+  const ts=t-S5.speak;if(S5.speak&&ts<2.2){txt(c,'A lô!',bx+10,by-60,{w:800,s:18,c:OR});
+   if(S5.taut){const pr=Math.min(1,ts/0.35);const px=x2+(x1-x2)*pr,py=by+(ay-by)*pr;c.fillStyle='#C8443A';for(let k=0;k<3;k++){c.beginPath();c.arc(px+k*10,py,4,0,TAU);c.fill()}
+    if(ts>0.35)txt(c,S5.near?'Nghe rõ: “A lô!”':'Không nghe thấy…',40,60,{w:800,s:18,c:S5.near?'#1F8A5B':'#C8443A'})}
+   else if(ts>0.4)txt(c,'Dây chùng – không nghe thấy…',40,60,{w:800,s:18,c:'#C8443A'})}
+  txt(c,'Bạn A',90,280,{a:'center',w:700});txt(c,'Bạn B',550,280,{a:'center',w:700})}
+ if(m==='tank'){c.strokeStyle=INK;c.lineWidth=3;c.strokeRect(150,110,300,220);const lvl=150;c.fillStyle='rgba(76,155,232,.35)';c.fillRect(152,lvl,296,178);
+  const cy=70+S5.depth*190;c.strokeStyle='#6B5B4B';c.lineWidth=2;c.beginPath();c.moveTo(300,20);c.lineTo(300,cy-30);c.stroke();c.strokeStyle='#8A7A66';c.strokeRect(272,cy-30,56,60);
+  clock(c,300,cy,1,S5.ring?Math.sin(t*80)*2:0);
+  if(S5.ring){for(let r=0;r<3;r++){const rr=((t*60+r*25)%75)+30;c.strokeStyle=`rgba(232,118,43,${1-rr/105})`;c.lineWidth=2;c.beginPath();c.arc(300,cy,rr,-.6,.6);c.stroke();c.beginPath();c.arc(300,cy,rr,Math.PI-.6,Math.PI+.6);c.stroke()}}
+  kid(c,540,170,'#3E7CB1',true);txt(c,S5.depth>0.4?'Đồng hồ đã ở trong nước':'Đồng hồ ở trên mặt nước',300,350,{a:'center',s:13,c:'#6B5B4B'});
+  if(S5.ring)txt(c,S5.depth>0.4?'Vẫn nghe thấy tiếng chuông!':'Nghe thấy tiếng chuông',40,50,{w:800,s:18,c:'#1F8A5B'})}
+ if(m==='jar'){const cx=260,cy=210;c.fillStyle='rgba(200,225,240,.35)';c.strokeStyle='#6B5B4B';c.lineWidth=3;c.beginPath();c.moveTo(cx-110,cy+90);c.lineTo(cx-110,cy-60);c.quadraticCurveTo(cx-110,cy-140,cx,cy-140);c.quadraticCurveTo(cx+110,cy-140,cx+110,cy-60);c.lineTo(cx+110,cy+90);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#8A7A66';c.fillRect(cx-140,cy+90,280,12);c.fillStyle='#C9B99E';c.fillRect(cx-40,cy+50,80,40);txt(c,'đế xốp',cx,cy+76,{a:'center',s:12});
+  const n=Math.round(90*S5.air);for(let i=0;i<n;i++){const a=(i*137.5)%360*Math.PI/180,r=(i*7919%100)/100;const px=cx+Math.cos(a+t*.3)*96*Math.sqrt(r),py=cy-30+Math.sin(a*1.3+t*.4)*90*Math.sqrt(r);c.fillStyle='rgba(34,57,91,.5)';c.beginPath();c.arc(px,py,2.6,0,TAU);c.fill()}
+  clock(c,cx,cy+20,1,S5.ring?Math.sin(t*80)*2:0);
+  if(S5.ring&&S5.air>0.03){for(let r=0;r<3;r++){const rr=((t*60+r*25)%75)+30;c.strokeStyle=`rgba(232,118,43,${(1-rr/105)*S5.air})`;c.lineWidth=2;c.beginPath();c.arc(cx,cy+20,rr,-.6,.6);c.stroke()}}
+  c.strokeStyle='#6B5B4B';c.lineWidth=6;c.beginPath();c.moveTo(cx+140,cy+96);c.lineTo(cx+200,cy+96);c.lineTo(cx+200,cy+130);c.stroke();txt(c,'tới máy hút chân không',cx+150,cy+150,{s:12});
+  kid(c,540,160,'#1F8A8A',true);const hear=S5.ring&&S5.air>0.05;txt(c,`Không khí trong bình: ${Math.round(S5.air*100)}%`,30,40,{w:800,s:16});
+  if(S5.ring)txt(c,hear?(S5.air>0.6?'Nghe rõ tiếng chuông':'Tiếng chuông nhỏ dần…'):'Không nghe thấy gì – dù chuông vẫn rung!',30,66,{w:800,s:16,c:hear?'#1F8A5B':'#C8443A'})}}
+
+/* ---------- C6 case ---------- */
+let S6={t0:null};
+$('#run6').onclick=()=>{ac();S6.t0=performance.now()/1000;for(let i=0;i<10;i++){hoof(.5+i*.16,.5)}$('#cap6').textContent='Âm truyền qua mặt đất tới tai người trinh sát sớm hơn và còn mạnh hơn so với âm truyền qua không khí.'};
+function draw6(t){const c=ctx('#cv6'),W=900,H=260;c.clearRect(0,0,W,H);c.fillStyle='#E9F2F6';c.fillRect(0,0,W,150);c.fillStyle='#C9A776';c.fillRect(0,150,W,110);
+ const te=S6.t0===null?-1:t-S6.t0;const hx=800;
+ // horse
+ const b=te>=0?Math.sin(t*14)*2:0;c.fillStyle='#5B4636';c.beginPath();c.ellipse(hx,128+b,26,12,0,0,TAU);c.fill();c.fillRect(hx-26,104+b,8,20);c.beginPath();c.ellipse(hx-30,100+b,10,6,0,0,TAU);c.fill();for(let l=0;l<4;l++)c.fillRect(hx-18+l*11,136+b,4,14+(te>=0?Math.sin(t*14+l)*3:0));
+ // scout
+ c.fillStyle='#3E5C76';c.fillRect(40,136,110,14);c.fillStyle='#F1C9A0';c.beginPath();c.arc(158,140,12,0,TAU);c.fill();c.fillStyle='#2B2118';c.beginPath();c.arc(160,134,12,Math.PI,TAU);c.fill();
+ if(te>=0){const vg=420,va=160,dist=hx-170;const xg=hx-Math.min(dist,te*vg),xa=hx-Math.min(dist,te*va);
+  // ground path
+  for(let k=0;k<5;k++){const x=xg+k*14;if(x<hx){c.fillStyle=`rgba(200,68,58,${.9-k*.15})`;c.fillRect(x,176,8,8)}}txt(c,'qua mặt đất (chất rắn)',Math.max(180,xg),206,{s:13,w:700,c:'#C8443A'});
+  const fade=Math.max(.15,1-(hx-xa)/dist*.85);for(let k=0;k<5;k++){const x=xa+k*14;if(x<hx){c.fillStyle=`rgba(31,138,138,${(.9-k*.15)*fade})`;c.beginPath();c.arc(x,80,4,0,TAU);c.fill()}}txt(c,'qua không khí',Math.max(180,xa),64,{s:13,w:700,c:TE});
+  if(xg<=170)txt(c,'Trinh sát nghe thấy rõ!',40,110,{w:800,s:16,c:'#C8443A'});if(xa<=170)txt(c,'Âm qua không khí tới sau, đã yếu',40,30,{w:800,s:14,c:TE})}
+ else txt(c,'Bấm “Cho ngựa phi”',W/2,30,{a:'center',c:'#6B5B4B'})}
+const O6=['Âm truyền được trong chất rắn (mặt đất)','Âm truyền qua mặt đất tới tai nhanh hơn và ít bị yếu đi hơn qua không khí','Mặt đất tự phát ra âm khi ngựa chạy','Âm không truyền được trong không khí'];const A6=[0,1];let sel6={};
+$('#q6a').innerHTML=O6.map((o,i)=>`<button class="opt" data-i="${i}" aria-pressed="false">☐ ${o}</button>`).join('');
+$$('#q6a .opt').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;sel6[i]=!sel6[i];b.textContent=(sel6[i]?'☑ ':'☐ ')+O6[i];b.setAttribute('aria-pressed',!!sel6[i]);b.classList.remove('right','wrong')});
+$('#chk6a').onclick=()=>{const ok=O6.every((o,i)=>!!sel6[i]===A6.includes(i));$$('#q6a .opt').forEach((b,i)=>{if(sel6[i])b.classList.add(A6.includes(i)?'right':'wrong')});if(ok){$('#f6a').className='fb ok';$('#f6a').textContent='Chính xác! Bí ẩn tiếng vó ngựa đã được giải.';ding();S6.a=1;fin()}else{$('#f6a').className='fb no';$('#f6a').textContent='Chưa đúng. Xem lại manh mối 5 và mô phỏng phía trên.';oops()}};
+mcq('#q6b','#f6b',['Đồng hồ trong bình đã hết pin','Trong bình chân không không có chất (hạt) nào để truyền dao động của chuông ra ngoài','Bình thuỷ tinh quá dày','Âm truyền trong chân không nhanh quá nên tai không kịp nghe'],1,'Đúng! Âm không truyền được trong chân không.',0);
+$$('#q6b .opt')[1].addEventListener('click',()=>{S6.b=1;fin()});
+function fin(){if(!(S6.a&&S6.b))return;clue(6);$('#case').hidden=false;$('#case').innerHTML=`<span class="tag">Hồ sơ đã phá</span><h3 style="margin-top:8px">Bí ẩn tiếng vó ngựa – ĐÃ GIẢI</h3><p>Tiếng vó ngựa làm mặt đất dao động. Dao động này truyền qua mặt đất (chất rắn) tới tai người trinh sát nhanh hơn và mạnh hơn so với truyền qua không khí.</p><b>Em đã học:</b> Sóng âm là sự truyền dao động âm trong các môi trường rắn, lỏng, khí.<ul>${Object.keys(CLUES).map(k=>`<li>${got[k]?'✓':'○'} Manh mối ${k}: ${CLUES[k]}</li>`).join('')}</ul><p class="note">Chụp màn hình hồ sơ này để lưu.</p>`}
+
+/* ---------- info ---------- */
+const INFO=[['Tên học liệu','Trinh Sát Âm Thanh'],['Loại học liệu','Học liệu tương tác và mô phỏng (mục II.2.3)'],['Môn học, lớp','Khoa học tự nhiên 7 – bộ sách Kết nối tri thức với cuộc sống'],['Bài học','Chương IV. Âm thanh – Bài 12. Sóng âm'],['Yêu cầu cần đạt','Thực hiện thí nghiệm tạo sóng âm (như gảy đàn, gõ vào thanh kim loại,…) để chứng tỏ được sóng âm có thể truyền được trong chất rắn, lỏng, khí. Giải thích được sự truyền sóng âm trong không khí.'],['Mục đích, đối tượng','Giáo viên dùng trong hoạt động mở đầu, hình thành kiến thức, luyện tập, vận dụng (kết hợp thí nghiệm thật); học sinh lớp 7 tự học, ôn tập. Dùng được trong dạy học trực tiếp, trực tuyến, kết hợp.'],['Hướng dẫn khai thác','Chọn hồ sơ ở thanh bên trái (hoặc phía trên trên điện thoại). Học liệu có âm thanh – bật loa. Mỗi hồ sơ có mục “Gợi ý cho giáo viên”. Chạy trên trình duyệt (máy tính, điện thoại, máy tính bảng), không cần cài đặt, không cần đăng nhập, mở được khi không có Internet.'],['Tác giả','Ngô Thị Phương – Tổ Khoa học tự nhiên, Trường THCS Võ Thị Sáu, phường An Biên, thành phố Hải Phòng'],['Nguồn tài liệu','SGK Khoa học tự nhiên 7 (Kết nối tri thức với cuộc sống), Bài 12: các thí nghiệm, Hình 12.1–12.8, câu hỏi mở đầu và mục “Em có thể”. Tốc độ âm (mục Em có biết) là giá trị gần đúng phổ biến.'],['Bản quyền','Hình vẽ, mô phỏng do tác giả vẽ bằng mã; toàn bộ âm thanh (trống, đàn, sáo, âm thoa, loa, chuông, vó ngựa) tổng hợp bằng mã, không dùng tệp âm thanh, hình ảnh của bên thứ ba. Phông chữ Signika, Be Vietnam Pro, JetBrains Mono (giấy phép SIL OFL). Cho phép sử dụng, chỉnh sửa cho mục đích giáo dục, ghi rõ nguồn.'],['Sử dụng trí tuệ nhân tạo','Có dùng trợ lý AI Claude (Anthropic) hỗ trợ thiết kế, viết mã; tác giả đã kiểm tra, xác minh nội dung và chịu trách nhiệm về tính chính xác.'],['An toàn thông tin','Không thu thập, không gửi dữ liệu cá nhân; tiến độ manh mối chỉ lưu trên thiết bị của người dùng.'],['Phiên bản','1.0 – tháng 10/2026']];
+$('#infoT').innerHTML=INFO.map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('');
+
+/* ---------- main loop ---------- */
+let last=performance.now()/1000;
+function loop(){const t=performance.now()/1000,dt=Math.min(.033,t-last);last=t;
+ if(cur==='intro')drawIntro(t);if(cur==='c1'){for(let i=0;i<4;i++)step1(dt/4);bar1()}if(cur==='c2')draw2(t);if(cur==='c3')draw3(t);if(cur==='c4')draw4(t);if(cur==='c5')draw5(t);if(cur==='c6')draw6(t);
+ requestAnimationFrame(loop)}
+renderClues();const h=(location.hash||'').slice(1);go(['intro','c1','c2','c3','c4','c5','c6','info'].includes(h)?h:'intro');requestAnimationFrame(loop);
+})();
+</script>
